@@ -1,0 +1,54 @@
+#!/opt/homebrew/bin/bash
+
+target_directory=$1
+search_pattern=$2
+
+find_target() {
+  mapfile search_output < <(find "$1" -iname "${2}")
+  if [[ ${#search_output[@]} -eq 0 ]]; then
+    # >&2 redirects output to stderr
+    echo "find failed" >&2
+    exit 2
+  fi
+  echo -n "${search_output[@]}"
+}
+sanitize_pattern() {
+  local string=$1
+  local str_length=${#string}
+if [ "${string:0:1}" == "*" ]; then
+  string="${string:1}"
+fi
+if [ "${string:(-1)}" == "*" ]; then
+  string="${string:0:str_length-1}"
+fi
+echo $string
+}
+identify_duplicate() {
+  local pattern=$(sanitize_pattern $1)
+  local target=$2
+  if [ $( grep -o "$pattern" <<< "$target" | wc -l ) -gt 1 ]; then
+    return 3
+  fi
+}
+remove_duplicate() {
+  local pattern=$1
+  declare -n array=$2
+  for i in "${!array[@]}"; do
+    if  identify_duplicate "$pattern" "${array[$i]}"; then
+      :
+    elif [ $? -eq 3 ]; then
+      unset array[$i]
+    fi
+  done
+}
+rm_file_n_dir() {
+  declare -n array=$1
+  rm -r -- "${array[@]}"
+}
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  find_return=$(find_target $target_directory $search_pattern )
+  mapfile -t temp_array <<< "$find_return"
+  remove_duplicate $search_pattern temp_array
+  echo "temp array: ${temp_array[@]}" 
+  rm_file_n_dir temp_array
+fi
