@@ -108,6 +108,28 @@ EOF
   rm_file_n_dir temp_array
   assert [ $(find_target "$TEMPDIR" "*target*"| wc -l) -eq 0 ]
 }
+@test "RM_FILE_N_DIR: removes file and dir" {
+  source remove_files.sh
+
+  [ -e "$TEMPDIR/target.txt" ]
+  [ -d "$TEMPDIR/target" ]
+  arr=("$TEMPDIR/target.txt" "$TEMPDIR/target")
+  rm_file_n_dir arr
+  [ ! -e "$TEMPDIR/target.txt" ]
+  [ ! -d "$TEMPDIR/target" ]
+}
+@test "TRIM_STRING: test remove whitespace before and after string" {
+  str_before=" testing"
+  str_after="testing "
+  str_after_n_before=" testing "
+  trim_before="${str_before/ /}"
+  trim_after="${str_after/ /}"
+  trim_before_n_after="${str_after_n_before// /}"
+
+  assert [ "$trim_before" == "testing" ]
+  assert [ "$trim_after" == "testing" ]
+  assert [ "$trim_before_n_after" == "testing" ]
+}
 @test "SCRIPT: find remaining files and remove them" {
   remove_files.sh "$TEMPDIR" "*target*"
   assert [ $(find_target "$TEMPDIR" "*target*"| wc -l) -eq 0 ]

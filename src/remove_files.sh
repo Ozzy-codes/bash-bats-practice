@@ -43,12 +43,14 @@ remove_duplicate() {
 }
 rm_file_n_dir() {
   declare -n array=$1
-  rm -r -- "${array[@]}"
+  for i in "${!array[@]}"; do
+    rm -r "${array[i]// /}"
+  done
 }
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # TODO: add user input checks to proceed with removal
   find_return=$(find_target $target_directory $search_pattern )
   mapfile -t temp_array <<< "$find_return"
   remove_duplicate $search_pattern temp_array
-  echo "temp array: ${temp_array[@]}" 
   rm_file_n_dir temp_array
 fi
