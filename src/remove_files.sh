@@ -44,7 +44,20 @@ remove_duplicate() {
 rm_file_n_dir() {
   declare -n array=$1
   for i in "${!array[@]}"; do
-    rm -r "${array[i]// /}"
+    local trimmedItem="${array[i]// /}"
+    local confirmRemove
+    echo "Would you like to remove: "
+    echo "$trimmedItem (y/n)"
+    read confirmRemove
+    confirmRemove="${confirmRemove,,}"
+    # TODO: update inputs
+    if [[ $confirmRemove == "y" || $confirmRemove == "yes" ]]; then
+    rm -r "$trimmedItem"
+  elif [[ $confirmRemove == "n" || $confirmRemove == "no" ]]; then
+    printf "skipping item\n"
+  else 
+    echo "aborting removal of this item"
+    fi
   done
 }
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
