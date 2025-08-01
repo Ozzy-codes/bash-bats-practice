@@ -1,5 +1,10 @@
 #!/opt/homebrew/bin/bash
 
+# Version 1.0
+# $1 - highlight the directory level you want to look in 
+# $2 - what pattern are you looking for? use *'s if you want to be exhuastive
+# TODO: make a version that produces a file of pattern matches and allows the user to edit the file, removing hits they want to keep. Once the file is :wq, the script moves forward with removing all hits in the file
+
 target_directory=$1
 search_pattern=$2
 
@@ -52,7 +57,7 @@ rm_file_n_dir() {
     confirmRemove="${confirmRemove,,}"
     # TODO: update inputs
     if [[ $confirmRemove == "y" || $confirmRemove == "yes" ]]; then
-    rm -r "$trimmedItem"
+    rm -rf "$trimmedItem"
   elif [[ $confirmRemove == "n" || $confirmRemove == "no" ]]; then
     printf "skipping item\n"
   else 
@@ -64,6 +69,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   # TODO: add user input checks to proceed with removal
   find_return=$(find_target $target_directory $search_pattern )
   mapfile -t temp_array <<< "$find_return"
-  remove_duplicate $search_pattern temp_array
+  remove_duplicate "$search_pattern" temp_array
   rm_file_n_dir temp_array
 fi

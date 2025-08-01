@@ -64,20 +64,35 @@ teardown_file() {
     source remove_files.sh
     # utilizing here strings V, and localizing the array so no clean up necessary after test runs
     local temp_array; mapfile temp_array <<<"$TEMPDIR/target.txt"
+
     run identify_duplicate "target" "${temp_array[0]}"
+    test "$status" -eq 0
+
+    run identify_duplicate "*target*" "something/targethisd/something.txt"
+    test "$status" -eq 0
+
+    run identify_duplicate "*target*" "something/targethisd/somethingtarget.txt"
+    test ! "$status" -eq 0
+
+    run identify_duplicate "target" "something/targethisd/somethingtarget.txt"
+    test ! "$status" -eq 0
+    test "$status" -eq 3
 }
 @test "IDENTIFY_DUPLICATE: number of grep hits exceeds one" {
     source remove_files.sh
     local temp_array; mapfile temp_array <<<"$TEMPDIR/target/file/target.txt"
-    run identify_duplicate "target" "${temp_array[0]}"
 
-    [[ "$status" -eq 3 ]]
+    run identify_duplicate "target" "sometarget/isnot/therighttarget/yes.txt"
+    test "$status" -eq 3 
+
+    run identify_duplicate "target" "${temp_array[0]}"
+    test "$status" -eq 3
 }
 @test "REMOVE_DUPLICATE: remove target from array" {
   source remove_files.sh
   # utilizing here documents; no spaces or tabs before DELIMITER
     local temp_array; mapfile -t temp_array <<-"EOF"
-    temp/target/target/file.txt
+    temp/targetyes/targetsomething/file.txt
     target.txt
     dir/target/file/target.txt
 EOF
@@ -93,8 +108,10 @@ BUT IT DOES NOT EXPOSE VARIABLE CHNAGES unless they are printed
 Therefore I don't use it in this test
 COMMENT
 
+    test "${#temp_array[@]}" -eq 3 
     remove_duplicate "target" temp_array
-    [ "${#temp_array[@]}" -eq 1 ]
+    test "${#temp_array[@]}" -eq 1 
+    [[ "${temp_array[@]}" =~ "target.txt" ]]
 }
 @test "RM_FILE_N_DIR: skip items when input 'n' or 'no'" {
   source remove_files.sh
@@ -129,8 +146,8 @@ COMMENT
   arr_dir=("$TEMPDIR/target")
   rm_file_n_dir arr_file <<< "y"
   rm_file_n_dir arr_dir <<< "y"
-  [ ! -e "$TEMPDIR/target.txt" ]
-  [ ! -d "$TEMPDIR/target" ]
+  test ! -e "$TEMPDIR/target.txt" 
+  test ! -d "$TEMPDIR/target" 
 }
 @test "TRIM_STRING: test remove whitespace before and after string" {
   str_before=" testing"
@@ -140,9 +157,9 @@ COMMENT
   trim_after="${str_after/ /}"
   trim_before_n_after="${str_after_n_before// /}"
 
-  [ "$trim_before" == "testing" ]
-  [ "$trim_after" == "testing" ]
-  [ "$trim_before_n_after" == "testing" ]
+  test "$trim_before" == "testing" 
+  test "$trim_after" == "testing" 
+  test "$trim_before_n_after" == "testing" 
 }
 @test "SCRIPT: find remaining files and remove them" {
   remove_files.sh "$TEMPDIR" "*target*" << EOD
@@ -150,5 +167,5 @@ y
 y
 EOD
 
-  [ $(find_target "$TEMPDIR" "*target*"| wc -l) -eq 0 ]
+  test $(find_target "$TEMPDIR" "*target*"| wc -l) -eq 0 
 }
