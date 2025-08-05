@@ -16,15 +16,16 @@ find_target() {
     exit 2
   fi
   echo -n "${search_output[@]}"
+  clean_stars=$(sanitize_pattern $2)
+  echo -n "${search_output[@]}" > "src/${clean_stars}_hits.txt"
 }
 sanitize_pattern() {
   local string=$1
-  local str_length=${#string}
 if [ "${string:0:1}" == "*" ]; then
   string="${string:1}"
 fi
 if [ "${string:(-1)}" == "*" ]; then
-  string="${string:0:str_length-1}"
+  string="${string:0:${#string}-1}"
 fi
 echo $string
 }
