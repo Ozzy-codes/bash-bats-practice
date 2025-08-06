@@ -1,0 +1,3 @@
+# lines starting with # will be ignored
+# DO NOT delete paths you wish to remove
+# DO delete paths you wish to remove
