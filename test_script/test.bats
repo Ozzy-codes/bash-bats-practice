@@ -63,6 +63,11 @@ teardown_file() {
     find_target "$TEMPDIR" "*target*"
     test $(find . -iname *target* | wc -l) -eq 1
 }
+@test "CONCAT_TEMPLATE: function exists" {
+  source remove_files.sh
+
+    declare -f concat_template
+}
 # @test "SANITIZE_PATTERN: string with '*' at end removed" {
 #     source remove_files.sh
 #     local string="target*"

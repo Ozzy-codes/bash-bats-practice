@@ -19,6 +19,9 @@ find_target() {
   clean_stars=$(sanitize_pattern $2)
   echo -n "${search_output[@]}" > "src/${clean_stars}_hits.txt"
 }
+function concat_template {
+  :
+}
 sanitize_pattern() {
   local string=$1
 if [ "${string:0:1}" == "*" ]; then
