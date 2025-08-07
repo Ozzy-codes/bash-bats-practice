@@ -69,11 +69,12 @@ teardown_file() {
     declare -f concat_template
     test -e "src/edit_template.txt"
 }
-@test "CONCAT_TEMPLATE: produce file with template on top" {
+@test "CONCAT_TEMPLATE: produce file with template on top, and something from hits file below it" {
   source remove_files.sh
 
      concat_template "src/edit_template.txt" "src/target_hits.txt"
      test -e "src/concat_file.txt" 
+     head -n 3 "src/concat_file.txt" | tail -n 1 | grep -i "do delete paths you wish to remove"
 }
 # @test "SANITIZE_PATTERN: string with '*' at end removed" {
 #     source remove_files.sh
