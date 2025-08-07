@@ -20,7 +20,9 @@ find_target() {
   echo -n "${search_output[@]}" > "src/${clean_stars}_hits.txt"
 }
 function concat_template {
-  :
+  template=$1
+  hit_file=$2
+  cat $template $hit_file > src/concat_file.txt
 }
 sanitize_pattern() {
   local string=$1

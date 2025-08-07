@@ -24,9 +24,9 @@ teardown() {
 teardown_file() {
     rm -r "$TEMPDIR"
 
-    target_temp_files=$(find . -iname *target*.txt)
-    if test -n $target_temp_files;then
-    for item in ${target_temp_files[@]}; do
+    target_temp_files=$(find . -iname *target*.txt && find . -iname concat_file.txt)
+    if test -n "${target_temp_files[@]}";then
+    for item in "${target_temp_files[@]}"; do
     rm -r $item
     done
     fi
@@ -63,10 +63,17 @@ teardown_file() {
     find_target "$TEMPDIR" "*target*"
     test $(find . -iname *target* | wc -l) -eq 1
 }
-@test "CONCAT_TEMPLATE: function exists" {
+@test "CONCAT_TEMPLATE: function, and file exists" {
   source remove_files.sh
 
     declare -f concat_template
+    test -e "src/edit_template.txt"
+}
+@test "CONCAT_TEMPLATE: produce file with template on top" {
+  source remove_files.sh
+
+     concat_template "src/edit_template.txt" "src/target_hits.txt"
+     test -e "src/concat_file.txt" 
 }
 # @test "SANITIZE_PATTERN: string with '*' at end removed" {
 #     source remove_files.sh
