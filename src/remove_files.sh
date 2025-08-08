@@ -57,15 +57,25 @@ remove_comments $1
 if test $(cat $1 | wc -l) -eq 0; then
   fail "Operation aborted" 3
 fi
-for line in $(cat $1); do
+while read -r line;do
   if test -d "$line"; then
     rm -rf "$line"
   else rm -f "$line"
   fi
-done
+done < <(cat $1)
+}
+cleanup() {
+  if test -e $clean_path; then
+    rm $clean_path
+  fi
+  if test -e src/concat_file.txt; then
+    rm src/concat_file.txt
+  fi
 }
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   find_target $target_directory $search_pattern
   concat_template src/edit_template.txt $clean_path
+  nvim src/concat_file.txt
   remove_lines src/concat_file.txt
+  cleanup
 fi
