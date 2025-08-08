@@ -7,7 +7,10 @@
 
 target_directory=$1
 search_pattern=$2
-
+fail() {
+    echo "Error: $1" >&2
+    exit "${2:-1}" # Exit with specified code or 1 by default
+}
 find_target() {
   mapfile search_output < <(find "$1" -iname "${2}")
   if [[ ${#search_output[@]} -eq 0 ]]; then
@@ -15,13 +18,14 @@ find_target() {
     echo "find failed" >&2
     exit 2
   fi
-  echo -n "${search_output[@]}"
-  clean_stars=$(sanitize_pattern $2)
-  echo -n "${search_output[@]}" > "src/${clean_stars}_hits.txt"
+  local clean_stars=$(sanitize_pattern $2)
+  clean_path="src/${clean_stars}_hits.txt"
+  echo -n "${search_output[@]}" > $clean_path
+  sort $clean_path
 }
-function concat_template {
-  template=$1
-  hit_file=$2
+concat_template() {
+  local template=$1
+  local hit_file=$2
   cat $template $hit_file > src/concat_file.txt
 }
 sanitize_pattern() {
@@ -34,47 +38,34 @@ if [ "${string:(-1)}" == "*" ]; then
 fi
 echo $string
 }
-identify_duplicate() {
-  local pattern=$(sanitize_pattern $1)
-  local target=$2
-  if [ $( grep -o "$pattern" <<< "$target" | wc -l ) -gt 1 ]; then
-    return 3
+remove_comments() {
+local line_array; mapfile line_array < $1
+for idx in "${!line_array[@]}"; do
+  item="${line_array[${idx}]}" 
+  if echo "$item" | grep -q "^#";then
+    unset line_array[$idx]
   fi
+done
+line_array=("${line_array[@]}")
+> $1
+for line in "${line_array[@]}";do
+  echo $line >> $1
+done
 }
-remove_duplicate() {
-  local pattern=$1
-  declare -n array=$2
-  for i in "${!array[@]}"; do
-    if  identify_duplicate "$pattern" "${array[$i]}"; then
-      :
-    elif [ $? -eq 3 ]; then
-      unset array[$i]
-    fi
-  done
-}
-rm_file_n_dir() {
-  declare -n array=$1
-  for i in "${!array[@]}"; do
-    local trimmedItem="${array[i]// /}"
-    local confirmRemove
-    echo "Would you like to remove: "
-    echo "$trimmedItem (y/n)"
-    read confirmRemove
-    confirmRemove="${confirmRemove,,}"
-    # TODO: update inputs
-    if [[ $confirmRemove == "y" || $confirmRemove == "yes" ]]; then
-    rm -rf "$trimmedItem"
-  elif [[ $confirmRemove == "n" || $confirmRemove == "no" ]]; then
-    printf "skipping item\n"
-  else 
-    echo "aborting removal of this item"
-    fi
-  done
+remove_lines() {
+remove_comments $1
+if test $(cat $1 | wc -l) -eq 0; then
+  fail "Operation aborted" 3
+fi
+for line in $(cat $1); do
+  if test -d "$line"; then
+    rm -rf "$line"
+  else rm -f "$line"
+  fi
+done
 }
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # TODO: add user input checks to proceed with removal
-  find_return=$(find_target $target_directory $search_pattern )
-  mapfile -t temp_array <<< "$find_return"
-  remove_duplicate "$search_pattern" temp_array
-  rm_file_n_dir temp_array
+  find_target $target_directory $search_pattern
+  concat_template src/edit_template.txt $clean_path
+  remove_lines src/concat_file.txt
 fi
